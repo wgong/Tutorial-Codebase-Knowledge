@@ -35,6 +35,26 @@ python main.py --dir /path/to/your/codebase --include "*.py" --exclude "*test*"
 python main.py --repo https://github.com/username/repo --language "Chinese"
 ```
 
+
+
+### Tutorial-Codebase-Knowledge
+
+```
+$ python main.py --dir /home/papagame/projects/wgong/Pocket/Tutorial-Codebase-Knowledge --include "*.py" "*.js" --exclude "tests/*" "examples/*"
+
+```
+
+### st_rag_demo
+
+```
+$ python main.py --dir ~/projects/digital-duck/st_rag_demo --include "*.py" "*.js" --exclude "tests/*"
+
+```
+
+- issues:
+    - rate-limit exceeded: try to use Ollama
+
+
 ### Vanna.AI
 
 ```

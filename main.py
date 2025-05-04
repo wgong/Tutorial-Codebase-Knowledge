@@ -16,7 +16,8 @@ DEFAULT_INCLUDE_PATTERNS = {
 DEFAULT_EXCLUDE_PATTERNS = {
     "venv/*", ".venv/*", "*test*", "tests/*", "docs/*", "examples/*", "v1/*",
     "dist/*", "build/*", "experimental/*", "deprecated/*",
-    "legacy/*", ".git/*", ".github/*", ".next/*", ".vscode/*", "obj/*", "bin/*", "node_modules/*", "*.log"
+    "legacy/*", ".git/*", ".github/*", ".next/*", ".vscode/*", "obj/*", "bin/*", "node_modules/*", "*.log",
+    "archive/*", "chat_history/*", "data/*", "vector_db/*", 
 }
 
 # --- Main Function ---
@@ -34,6 +35,8 @@ def main():
     parser.add_argument("-i", "--include", nargs="+", help="Include file patterns (e.g. '*.py' '*.js'). Defaults to common code files if not specified.")
     parser.add_argument("-e", "--exclude", nargs="+", help="Exclude file patterns (e.g. 'tests/*' 'docs/*'). Defaults to test/build directories if not specified.")
     parser.add_argument("-s", "--max-size", type=int, default=100000, help="Maximum file size in bytes (default: 100000, about 100KB).")
+    parser.add_argument("-r", "--max-retries", type=int, default=3, help="Maximum number of retries.")
+    parser.add_argument("-w", "--wait", type=int, default=10, help="Retry wait-time in sec.")
     # Add language parameter for multi-language support
     parser.add_argument("--language", default="english", help="Language for the generated tutorial (default: english)")
 
@@ -55,9 +58,11 @@ def main():
         "output_dir": args.output, # Base directory for CombineTutorial output
 
         # Add include/exclude patterns and max file size
-        "include_patterns": set(args.include) if args.include else DEFAULT_INCLUDE_PATTERNS,
-        "exclude_patterns": set(args.exclude) if args.exclude else DEFAULT_EXCLUDE_PATTERNS,
+        "include_patterns": set(args.include) | DEFAULT_INCLUDE_PATTERNS,
+        "exclude_patterns": set(args.exclude) | DEFAULT_EXCLUDE_PATTERNS,
         "max_file_size": args.max_size,
+        "max_retries": args.max_retries,
+        "wait": args.wait,
 
         # Add language for multi-language support
         "language": args.language,
@@ -75,7 +80,7 @@ def main():
     print(f"\nStarting tutorial generation for: {args.repo or args.dir} in {args.language.capitalize()} language")
 
     # Create the flow instance
-    tutorial_flow = create_tutorial_flow()
+    tutorial_flow = create_tutorial_flow(shared)
 
     # Run the flow
     tutorial_flow.run(shared)

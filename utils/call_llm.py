@@ -47,7 +47,7 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
         "Anthropic" : ["claude-3-7-sonnet-20250219"], 
         "OpenAI" : ["gpt-4o-mini"]
     }
-    llm_vendor = "Google"
+    llm_vendor = "Google" # "OpenAI" # 
     llm_model = LLM_MODELS.get(llm_vendor)[0]
     print(f"use LLM model: {llm_vendor} / {llm_model}")
     if llm_vendor == "Google":
