@@ -1,4 +1,4 @@
-from google import genai
+
 import os
 import logging
 import json
@@ -42,23 +42,73 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
             return cache[prompt]
     
     # Call the LLM if not in cache or cache disabled
-    client = genai.Client(
-        vertexai=True, 
-        # TODO: change to your own project id and location
-        project=os.getenv("GEMINI_PROJECT_ID", "your-project-id"),
-        location=os.getenv("GEMINI_LOCATION", "us-central1")
-    )
-    # You can comment the previous line and use the AI Studio key instead:
-    # client = genai.Client(
-    #     api_key=os.getenv("GEMINI_API_KEY", "your-api_key"),
-    # )
-    model = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-exp-03-25")
-    response = client.models.generate_content(
-        model=model,
-        contents=[prompt]
-    )
-    response_text = response.text
+    LLM_MODELS = {
+        "Google": ["gemini-2.5-pro-exp-03-25"], 
+        "Anthropic" : ["claude-3-7-sonnet-20250219"], 
+        "OpenAI" : ["gpt-4o-mini"]
+    }
+    llm_vendor = "Google"
+    llm_model = LLM_MODELS.get(llm_vendor)[0]
+    print(f"use LLM model: {llm_vendor} / {llm_model}")
+    if llm_vendor == "Google":
+        from google import genai
+        # Google Gemini
+        USE_AI_STUDIO_KEY = True
+        if USE_AI_STUDIO_KEY:
+            # You can comment the previous line and use the AI Studio key instead:
+            client = genai.Client(
+                api_key=os.getenv("GEMINI_API_KEY", "your-api_key"),
+            )
+        else:
+            client = genai.Client(
+                vertexai=True, 
+                # TODO: change to your own project id and location
+                project=os.getenv("GEMINI_PROJECT_ID", "your-project-id"),
+                location=os.getenv("GEMINI_LOCATION", "us-central1")
+            )
+
+        # default Gemini model = Gemini Advanced 2.5 Pro (experimental)
+        model = os.getenv("GEMINI_MODEL", llm_model)  
+
+        response = client.models.generate_content(
+            model=model,
+            contents=[prompt]
+        )
+        response_text = response.text
+
+    elif llm_vendor == "Anthropic":
+        from anthropic import Anthropic
+        client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY", "your-api-key"))
+        response = client.messages.create(
+            model=llm_model,  # "claude-3-7-sonnet-20250219",
+            max_tokens=21000,
+            thinking={
+                "type": "enabled",
+                "budget_tokens": 20000
+            },
+            messages=[
+                {"role": "user", "content": prompt}
+            ]
+        )
+        response_text = response.content[1].text
+
+    elif llm_vendor == "OpenAI":
+        from openai import OpenAI
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", "your-api-key"))
+        r = client.chat.completions.create(
+            model=llm_model,  #"gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            response_format={
+                "type": "text"
+            },
+            reasoning_effort="medium",
+            store=False
+        )
+        response_text = r.choices[0].message.content
     
+    else:
+        raise Exception(f"Unsupported LLM vendor: {llm_vendor}")
+
     # Log the response
     logger.info(f"RESPONSE: {response_text}")
     
@@ -98,7 +148,7 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
 #             {"role": "user", "content": prompt}
 #         ]
 #     )
-#     return response.content[1].text
+#     response_text = response.content[1].text
 
 # # Use OpenAI o1
 # def call_llm(prompt, use_cache: bool = True):    
@@ -113,10 +163,10 @@ def call_llm(prompt: str, use_cache: bool = True) -> str:
 #         reasoning_effort="medium",
 #         store=False
 #     )
-#     return r.choices[0].message.content
+#     response_text = r.choices[0].message.content
 
 if __name__ == "__main__":
-    test_prompt = "Hello, how are you?"
+    test_prompt = "can you find an arxiv paper titled as A New Exploration into Chinese Characters: from Simplification to Deeper Understanding"
     
     # First call - should hit the API
     print("Making call...")

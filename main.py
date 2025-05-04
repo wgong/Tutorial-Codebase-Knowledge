@@ -72,7 +72,7 @@ def main():
     }
 
     # Display starting message with repository/directory and language
-    print(f"Starting tutorial generation for: {args.repo or args.dir} in {args.language.capitalize()} language")
+    print(f"\nStarting tutorial generation for: {args.repo or args.dir} in {args.language.capitalize()} language")
 
     # Create the flow instance
     tutorial_flow = create_tutorial_flow()
